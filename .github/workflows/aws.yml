@@ -1,7 +1,5 @@
-# Workflow Name
-name: Deploy Static Website to EC2
+name: Deploy Website
 
-# Trigger when code is pushed to main
 on:
   push:
     branches:
@@ -10,56 +8,30 @@ on:
 jobs:
 
   deploy:
-
-    # GitHub runner machine
     runs-on: ubuntu-latest
 
     steps:
 
-      # Step 1 - Download repository
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # Step 2 - Copy HTML file to EC2
-      - name: Copy File to EC2
+      - name: Copy Website
         uses: appleboy/scp-action@v0.1.7
         with:
-
-          # EC2 Public IP
           host: ${{ secrets.EC2_HOST }}
-
-          # Ubuntu username
           username: ${{ secrets.EC2_USER }}
-
-          # PEM private key
           key: ${{ secrets.EC2_KEY }}
 
-          # File inside repository
-          source: "test.html"
-
-          # Temporary EC2 location
+          source: "index.html"
           target: "/home/ubuntu"
 
-      # Step 3 - Deploy to NGINX
-      - name: Deploy to NGINX
+      - name: Deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
-
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
 
           script: |
-
-            echo "Starting Deployment"
-
-            # Copy HTML file as index.html
-            sudo cp /home/ubuntu/test.html /var/www/html/index.html
-
-            # Permissions
-            sudo chmod 644 /var/www/html/index.html
-
-            # Restart NGINX
+            sudo cp /home/ubuntu/index.html /var/www/html/index.html
             sudo systemctl restart nginx
-
-            echo "Deployment Successful"
