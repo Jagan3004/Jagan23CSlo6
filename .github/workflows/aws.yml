@@ -1,0 +1,65 @@
+
+# Workflow Name
+name: Deploy Static Website to EC2
+
+# Run workflow when pushing to main branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  # Deployment Job
+  deploy:
+
+    # GitHub virtual machine
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # Download repository code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Copy index.html into EC2
+      - name: Copy File to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+
+          # EC2 Public IP
+          host: ${{ secrets.EC2_HOST }}
+
+          # Ubuntu Username
+          username: ${{ secrets.EC2_USER }}
+
+          # PEM Private Key
+          key: ${{ secrets.EC2_KEY }}
+
+          # File to copy
+          source: "index.html"
+
+          # Temporary destination
+          target: "/home/ubuntu"
+
+      # Move file into NGINX folder
+      - name: Deploy to NGINX
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+
+          script: |
+
+            # Move HTML file
+            sudo mv /home/ubuntu/index.html /var/www/html/index.html
+
+            # Restart NGINX
+            sudo systemctl restart nginx
+
+
+
+
+
